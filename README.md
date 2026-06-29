@@ -8,7 +8,7 @@ This repository contains battle-tested scripts used in real-world M365 data migr
 
 ## Available Scripts
 
-### 1. Pre-Provision OneDrive for Azure AD Security Group (E5 Licensing)
+### 1. Pre-Provision OneDrive for Azure AD Security Group (E5 Licensing) v1.1
 
 **Script:** `PreProvision-OneDrive-E5-Group.ps1`
 
@@ -45,6 +45,8 @@ iwr "https://raw.githubusercontent.com/jessemooreuk/M365-Data-Migration-Scripts/
 
 See the script header (Get-Help) for full documentation and examples.
 
+**v1.1 Update:** Fixed the common `Import-Module Microsoft.Graph` error ("function capacity 4096 has been exceeded") by using selective sub-module imports instead of the monolithic package.
+
 ## How to Use These Scripts
 
 1. Download the .ps1 file(s)
@@ -54,7 +56,7 @@ See the script header (Get-Help) for full documentation and examples.
 
 ## Prerequisites (Common to All Scripts)
 - PowerShell 5.1 or 7+
-- Microsoft Graph PowerShell SDK
+- Microsoft Graph PowerShell SDK (selective modules)
 - SharePoint Online Management Shell
 - Appropriate M365 admin roles (Global Admin, SharePoint Admin, User Admin, etc.)
 - MFA-enabled accounts supported via interactive login
