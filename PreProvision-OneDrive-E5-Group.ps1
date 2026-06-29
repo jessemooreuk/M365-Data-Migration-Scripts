@@ -28,10 +28,10 @@
     M365 Data Migration Team
 
 .VERSION
-    1.1 - 29 Jun 2026 (Fixed Microsoft.Graph import issue)
+    1.2 - 29 Jun 2026
 
 .PREREQUISITES
-    - PowerShell 5.1+ or PowerShell 7.x
+    - PowerShell 7.x strongly recommended (PowerShell 5.1 often hits function limits)
     - Run as a user with:
         • SharePoint Administrator or Global Admin role (for SPO)
         • Azure AD permissions to read groups/users (or Global Reader)
@@ -60,9 +60,9 @@
     - Run this script BEFORE any migration tool that requires OneDrive sites to exist.
     - The CSV can be used as input for migration tools (e.g. ShareGate, AvePoint, etc.).
     - Transcript log is created in the same folder for full audit trail.
-    - v1.1: Uses selective Microsoft.Graph sub-module imports to avoid the
-      "function capacity 4096 exceeded" error that occurs with the full
-      monolithic Microsoft.Graph module.
+    - v1.2: Removed all Import-Module calls for Microsoft.Graph sub-modules.
+      The cmdlets now load on-demand when Connect-MgGraph is called.
+      This resolves the persistent "function capacity 4096 exceeded" error.
 ================================================================================
 #>
 
@@ -107,9 +107,9 @@ Write-Host "WhatIf Mode         : $WhatIf" -ForegroundColor Gray
 Write-Host "=================================================================================" -ForegroundColor Cyan
 
 #--------------------------------------------------------------------------------
-# MODULE CHECK & INSTALL (Selective Microsoft Graph - avoids 4096 function limit)
+# MODULE CHECK (No Import-Module for Graph to avoid capacity limit)
 #--------------------------------------------------------------------------------
-Write-Host "`n[1/5] Checking and importing required Microsoft Graph sub-modules..." -ForegroundColor Cyan
+Write-Host "`n[1/5] Checking required modules (Graph modules load on-demand)..." -ForegroundColor Cyan
 
 $graphModules = @(
     "Microsoft.Graph.Authentication",
@@ -119,21 +119,21 @@ $graphModules = @(
 
 foreach ($module in $graphModules) {
     if (-not (Get-Module -ListAvailable -Name $module)) {
-        Write-Host "  Installing $module (CurrentUser)..." -ForegroundColor Yellow
+        Write-Host "  Installing $module (CurrentUser scope)..." -ForegroundColor Yellow
         Install-Module -Name $module -Scope CurrentUser -Force -AllowClobber -ErrorAction Stop
+        Write-Host "    Installed successfully." -ForegroundColor Green
+    } else {
+        Write-Host "  $module already installed." -ForegroundColor Gray
     }
-    Write-Host "  Importing $module..." -ForegroundColor Gray
-    Import-Module -Name $module -ErrorAction Stop
 }
 
-# SharePoint Online module (still required for Request-SPOPersonalSite)
+# SharePoint Online module still requires explicit import
 if (-not (Get-Module -ListAvailable -Name "Microsoft.Online.SharePoint.PowerShell")) {
     Write-Host "  Installing Microsoft.Online.SharePoint.PowerShell..." -ForegroundColor Yellow
     Install-Module Microsoft.Online.SharePoint.PowerShell -Scope CurrentUser -Force -AllowClobber
 }
 Import-Module Microsoft.Online.SharePoint.PowerShell -ErrorAction Stop
-
-Write-Host "  All required modules imported successfully." -ForegroundColor Green
+Write-Host "  Microsoft.Online.SharePoint.PowerShell imported successfully." -ForegroundColor Green
 
 #--------------------------------------------------------------------------------
 # CONNECT TO MICROSOFT GRAPH
